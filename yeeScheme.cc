@@ -6,6 +6,7 @@
 #include<cassert>
 #include <cstddef>
 #include<cmath>
+//#include<boost/filesystem.hpp>
 //#include<mpi.h>
 //#include<memory>
 using namespace std;
@@ -425,13 +426,16 @@ void Matrix::PrintToFile(int tstep)
     num = to_string(tstep);
     
   ofstream fieldOutput;
+  // string myString = "MyField" + num;
   string myString = "./Field/MyField" + num;
   fieldOutput.open(myString);
   for(auto x =0; x < dx; ++x){
     for(auto y =0; y < dy; ++y)
       fieldOutput << setprecision(2)<< scientific << data[x][y]<< " ";
     fieldOutput<<endl;
-  } }
+  }
+  fieldOutput.close();
+}
 
 double &Matrix::operator()(int x,int y)
 {
