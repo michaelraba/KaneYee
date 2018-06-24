@@ -425,7 +425,7 @@ void Matrix::PrintToFile(int tstep)
     num = to_string(tstep);
     
   ofstream fieldOutput;
-  string myString = "MyField" + num;
+  string myString = "./Field/MyField" + num;
   fieldOutput.open(myString);
   for(auto x =0; x < dx; ++x){
     for(auto y =0; y < dy; ++y)
