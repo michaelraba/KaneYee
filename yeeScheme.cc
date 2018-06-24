@@ -1,4 +1,3 @@
-
 #include<iostream>
 #include<fstream>
 #include<sstream>
@@ -550,3 +549,6 @@ int main(int argc, char* argv[])
 }
 return 0;
 }
+
+//eof
+//done
