@@ -65,10 +65,14 @@ public:
   YeeScheme();
   YeeScheme(vector<Matrix> m);
   void Print();
+  /* Obsolete methods for updating the interior
+   * These are replaced by the single method YeeScheme::updateInterior()
+
   vector<Matrix> & updateDz(); //this data structure is a problem because only applu to TE.
   vector<Matrix> & updateEz();
   vector<Matrix> & updateHx();
   vector<Matrix> & updateHy();
+  */
   vector<Matrix> & updatePulse(int tStep);
   enum PulseOptions { GAUSS_SOURCE, SINE_SOURCE /*...*/ };
   enum BoundaryOptions { NEUMANN_BOUNDARY, DIRICHLET_BOUNDARY, TEST /*...*/ };
@@ -261,16 +265,6 @@ vector<Matrix> & YeeScheme::updateBoundary(YeeScheme::BoundaryOptions b, vector<
 
 // IMPORTANT NOTE: x,y was = 1, changed to 0
 // to experiment...
-vector<Matrix> &  YeeScheme::updateDz() 
-{
-  /* Loop for interior*/
-     for (auto y =1+gh; y < field[0].dy-2;++y){
-       for (auto x =1+gh; x <   field[0].dx-2 ;++x){
-           field[0].data[x][y] +=  + 0.5*(field[2].data[x][y] - field[2].data[x-1][y] - field[1].data[x][y] + field[1].data[x][y-1] );
-         //field[0].data[x][y] = 545;
-         }}
-       return field; 
-}
 
 vector<Matrix> & YeeScheme::updatePulse(int tStep)
 {
@@ -548,3 +542,4 @@ int main(int argc, char* argv[])
 return 0;
 }
 //eof
+
