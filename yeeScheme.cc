@@ -410,11 +410,6 @@ vector<Matrix> &  YeeScheme::updateInterior(YeeScheme::ModeOptions m, vector<Mat
              | ey      | field[2]                   |
              |---------+----------------------------| */
            case TE_MODE:
-             //field[0]=hz
-             //field[1]=ex
-             //field[2]=ey
-
-
              // * Update hz-field
              for (auto y =gh; y < field[0].dy-1;++y){
                for (auto x =gh; x <   field[0].dx-1 ;++x){
