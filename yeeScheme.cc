@@ -365,7 +365,7 @@ vector<Matrix> &  YeeScheme::updateInterior(YeeScheme::ModeOptions m, vector<Mat
                |---------+----------------------------|
                | field   | corresponding vector index |
                |---------+----------------------------|
-               | dz      | field[0]                   | //where is ez field ?
+               | dz      | field[0]                   | 
                | hx      | field[1]                   |
                | hy      | field[2]                   |
                | ez      | field[3]                   |
