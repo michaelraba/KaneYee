@@ -17,7 +17,7 @@ all: $(MYPROGRAM)
 
 $(MYPROGRAM): $(SOURCE)
 
-	$(CC) -I$(MYINCLUDES) $(SOURCE) -o$(MYPROGRAM) 
+	$(CC) -g -I$(MYINCLUDES) $(SOURCE) -o$(MYPROGRAM) 
 
 clean:
 
