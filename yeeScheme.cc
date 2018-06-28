@@ -1,8 +1,8 @@
-//ஜஜஜஜஜஜஜஜஜஜஜஜஜஜஜஜஜஜ▬▬▬▬▬▬▬▬▬
-// Raba FDTD Scheme (Yee)
-// Copyright Raba (c) 2018
-// No distribuir
-//ஜஜஜஜஜஜஜஜஜஜஜஜஜஜஜஜஜஜ▬▬▬▬▬▬▬▬▬
+// ஜஜஜஜஜஜஜஜஜஜஜஜஜஜஜஜஜஜஜ
+// ஜ Raba FDTD Scheme (Yee)      ஜ 
+// ஜ Copyright Raba (c) 2018     ஜ 
+// ஜ No distribuir               ஜ 
+// ஜஜஜஜஜஜஜஜஜஜஜஜஜஜஜஜஜஜஜ▬▬▬▬▬▬▬▬▬
 
 #include<iostream>
 #include<fstream>
@@ -279,8 +279,6 @@ vector<Matrix> & YeeScheme::updatePulse(int tStep)
   //field[0].data[ic][jc] = 777;
   return field;
 }
-// IMPORTANT NOTE: x,y was = 1, changed to 0
-// to experiment...
 
 void Matrix::Print() const
 {
@@ -371,7 +369,7 @@ vector<Matrix> &  YeeScheme::updateInterior(YeeScheme::ModeOptions m, vector<Mat
                | ez      | field[3]                   |
                | ga      | field[4]                   |
                |---------+----------------------------| */
-           case TM_MODE: //combine ez, hx, hy into this case!
+           case TM_MODE: 
              // * Update dz-field
              for (auto y =gh; y < field[0].dy-1;++y){ //fixed for spurious boundary!
                for (auto x =gh; x <   field[0].dx-1 ;++x){
