@@ -1,0 +1,2 @@
+set pm3d map
+do for[i=1:59]{splot sprintf('MyField%d',i) matrix w image; pause 0.2}

@@ -4,6 +4,12 @@
 // ஜ No distribuir               ஜ 
 // ஜஜஜஜஜஜஜஜஜஜஜஜஜஜஜஜஜஜஜ▬▬▬▬▬▬▬▬▬
 
+
+/*
+ * Numerical solution of initial boundary value problems involving maxwell's equations in isotropic media
+ * Todo-add Pml 
+ */
+
 #include<iostream>
 #include<fstream>
 #include<sstream>
@@ -248,7 +254,7 @@ vector<Matrix> & YeeScheme::updatePulse(int tStep)
   double t0= 20.0;
   double  pulse = exp(-0.5*(pow((t0-T)/spread,2)));
   cout <<"********* PulseValue is = "<< pulse<<"\n"<<endl;
-  field[0].data[ic][jc] = pulse;
+   field[0].data[ic][jc] = pulse;
   //field[0].data[ic][jc] = 777;
   return field;
 }
@@ -456,7 +462,8 @@ vector<Matrix> &  YeeScheme::iterateSolution(int tStep, YeeScheme::ModeOptions m
   //updateBoundary(YeeScheme::NEUMANN_BOUNDARY);
 
               updateBoundary(YeeScheme::DIRICHLET_BOUNDARY, it);
-              updateInterior(YeeScheme::TEST_CASE, it);
+              updatePulse(tStep);
+              updateInterior(YeeScheme::TE_MODE, it);
   it->PrintToFile(tStep);
 
   //updateBoundary(YeeScheme::TEST, it);
@@ -535,4 +542,3 @@ int main(int argc, char* argv[])
 return 0;
 }
 //eof
-
