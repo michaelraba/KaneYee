@@ -142,7 +142,28 @@ void Matrix::makeIdentity()
       this->data[x][y] = 1;
   } }
 
+/* Function: updateBoundary()
+ * parameters:
+ ** boundaryOptions m
+ ** iterator it
+ * Returns: the matrix of vector fields
 
+Description: Updates the boundary (ie. non-interior and not the PML region)
+ boundaryoptions are:
+ *** DIRICHLET_BOUNDARY
+ Updates according to the rule
+
+     $\Phi_0 = \Phi_1$,
+
+ where $Phi$ is the current field (ie Hz, Ex, etc) that the iterator it points to
+ *** NEUMANN_BOUNDARY
+
+ Updates according to the rule
+
+ $\Phi_0 = -\Phi_1$,
+
+ where $Phi$ is the current field (ie Hz, Ex, etc) that the iterator it points to
+*/
 vector<Matrix> & YeeScheme::updateBoundary(YeeScheme::BoundaryOptions b, vector<Matrix>::iterator it)
 {
   switch (b)
@@ -304,6 +325,24 @@ private:
 };
 
 
+/* Function: updateInterior()
+ * parameters:
+ ** ModeOptions p
+ ** iterator it
+ * Returns: the matrix of vector fields
+
+ Description: Updates the interior (ie. non-boundary and not the PML region)
+ modeoptions are:
+ *** TE_MODE
+
+ Uses the vector field tuple (Hz, Ex, Ey) which is stored in the vectors of matrices vector<Matrix>. The tuple is updated according to the rules as described in Yee
+
+     Numerical solution of initial boundary value problems involving maxwell's equations in isotropic media
+
+     *** TM_MODE
+
+     Uses the vector field tuple (Ez, Hx,Hy) which is stored in the vectors of matrices vector<Matrix>. The tuple is updated according to the rules as described in Yee. 
+*/
 vector<Matrix> &  YeeScheme::updateInterior(YeeScheme::ModeOptions m, vector<Matrix>::iterator it)
 {
          switch (m)
