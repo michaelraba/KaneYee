@@ -76,7 +76,7 @@ public:
   vector<Matrix> & updatePulse(int tStep);
   enum PulseOptions { GAUSS_SOURCE, SINE_SOURCE /*...*/ };
   enum BoundaryOptions { NEUMANN_BOUNDARY, DIRICHLET_BOUNDARY, TEST /*...*/ };
-  enum ModeOptions { TM_MODE, TE_MODE/*...*/ }; //maybe this enum belongs in main!
+  enum ModeOptions { TM_MODE, TE_MODE, TEST_CASE /*...*/}; //maybe this enum belongs in main!
   vector<Matrix> & updateInterior(ModeOptions, vector<Matrix>::iterator it );
   vector<Matrix> & iterateSolution(int tStep, ModeOptions);
   vector<Matrix> & updateBoundary(BoundaryOptions);
@@ -154,34 +154,16 @@ vector<Matrix> & YeeScheme::updateBoundary(YeeScheme::BoundaryOptions b, vector<
                                   /*ghostPointLoop->vertical*/
                        for (auto x =0; x <   it->dx ;++x){
                          //for (auto y =1; y < it->dy-1;++y){
-                         it->data[x][0] = it->data[x][2]; // 88888; //ghostpointOben
-                           it->data[x][JE-gh] = it->data[x][JE-gh-2]; // 666666; //ghostpointUnten
+                         it->data[x][0] = it->data[x][1]; // 88888; //ghostpointOben
+                           it->data[x][JE-gh] = it->data[x][JE-gh-1]; // 666666; //ghostpointUnten
                        } /* end boundary->vertical*/ 
 
                        /* ghostPointLoop->horizontal*/
                        //for (auto x =gh; x <   it->dx-1 ;++x){
                        for (auto y =0; y < it->dy;++y){ //do this one for horiz..
-                         it->data[0][y] =it->data[2][y] ; //      444444;
-                         it->data[JE-gh][y] =it->data[JE-gh-2][y]  ; //555555;
+                         it->data[0][y] =it->data[1][y] ; //      444444;
+                         it->data[JE-gh][y] =it->data[JE-gh-1][y]  ; //555555;
                        } /* end boundary->horizontal*/ 
-
-                       /********  Boundary loops! ********* / 
-                       /* Loop for boundary ->horizontal*/
-                        for (auto x =gh; x <   it->dx-1 ;++x){
-                          // for N-bdy,should be: Phi_0 = Phi_1
-                          // where Phi_0 is ghost point &&  Phi_1 is bdy... 
-                          it->data[x][gh] =it->data[x][0]  ; //    1111111; // grenzpunktOben 
-                          it->data[x][JE-gh-1] =it->data[x][JE-gh] ; // 1111111;  // grenzpunktUnten
-                         } /* end boundary->horizontal*/ 
-                       
-                        /* Loop for boundary->vertical*/
-                        //for (auto x =gh; x <   it->dx-1 ;++x){
-                          for (auto y =1; y < it->dy-1;++y){ 
-                            it->data[gh][y] =it->data[0][y]; // 2222;  // grenzpunktLinks
-                            it->data[JE-gh-1][y] =it->data[JE-gh][y]; // 2222; // grenzpunktRechts
-                        } /* end boundary->vertical*/ 
-         
-     cout<< "NeuBdyWParameters:\n"<< *it << endl;
   return field;
       }
 
@@ -192,32 +174,17 @@ vector<Matrix> & YeeScheme::updateBoundary(YeeScheme::BoundaryOptions b, vector<
                                   /*ghostPointLoop->vertical*/
                        for (auto x =0; x <   it->dx ;++x){
                          //for (auto y =1; y < it->dy-1;++y){
-                         it->data[x][0] = 0;
-                         it->data[x][JE-gh] = 0;
+                         it->data[x][0] = (-1)*it->data[x][1]; // 88888; //ghostpointOben0;
+                         it->data[x][JE-gh] = (-1)*it->data[x][JE-gh-1];;
                        } /* end boundary->vertical*/ 
 
                        /* ghostPointLoop->horizontal*/
                        //for (auto x =gh; x <   it->dx-1 ;++x){
                        for (auto y =0; y < it->dy;++y){ //do this one for horiz..
-                         it->data[0][y] = 0;
-                         it->data[JE-gh][y] = 0;
+                         it->data[0][y] =(-1)*it->data[1][y] ;;
+                         it->data[JE-gh][y] =(-1)*it->data[JE-gh-1][y]  ;
                        } /* end boundary->horizontal*/ 
 
-                       /********  Boundary loops! ********* / 
-                       /* Loop for boundary ->horizontal*/
-                        for (auto x =gh; x <   it->dx-1 ;++x){
-                          // for N-bdy,should be: Phi_0 = Phi_1
-                          // where Phi_0 is ghost point &&  Phi_1 is bdy... 
-                          it->data[x][gh] = 0;
-                          it->data[x][JE-gh-1] = 0;
-                         } /* end boundary->horizontal*/ 
-                       
-                        /* Loop for boundary->vertical*/
-                        //for (auto x =gh; x <   it->dx-1 ;++x){
-                          for (auto y =1; y < it->dy-1;++y){ 
-                            it->data[gh][y] = 0 ;
-                            it->data[JE-gh-1][y] = 0;
-                        } /* end boundary->vertical*/ 
          
      cout<< "DirichletBdyWithParameters:\n"<< *it << endl;
         return field;}
@@ -240,21 +207,6 @@ vector<Matrix> & YeeScheme::updateBoundary(YeeScheme::BoundaryOptions b, vector<
                          it->data[JE-gh][y] =555555;
                        } /* end boundary->horizontal*/ 
 
-                       /********  Boundary loops! ********* / 
-                       /* Loop for boundary ->horizontal*/
-                        for (auto x =gh; x <   it->dx-1 ;++x){
-                          // for N-bdy,should be: Phi_0 = Phi_1
-                          // where Phi_0 is ghost point &&  Phi_1 is bdy... 
-                          it->data[x][gh] =1111111; // grenzpunktOben 
-                          it->data[x][JE-gh-1] =1111111;  // grenzpunktUnten
-                         } /* end boundary->horizontal*/ 
-                       
-                        /* Loop for boundary->vertical*/
-                        //for (auto x =gh; x <   it->dx-1 ;++x){
-                          for (auto y =1; y < it->dy-1;++y){ 
-                            it->data[gh][y] =2222;  // grenzpunktLinks
-                            it->data[JE-gh-1][y] =2222; // grenzpunktRechts
-                        } /* end boundary->vertical*/ 
                           cout<< "Oink!\n";
                           it->Print();
         return field;}
@@ -424,7 +376,31 @@ vector<Matrix> &  YeeScheme::updateInterior(YeeScheme::ModeOptions m, vector<Mat
                  field[2].data[x][y] += .5*(field[2].data[x][y] - field[2].data[x-1][y])  ;}} // end ey-field update
 
              return field;
+
+           case TEST_CASE:
+             
+             // * Update hz-field
+             for (auto y =gh; y < field[0].dy-1;++y){
+               for (auto x =gh; x <   field[0].dx-1 ;++x){
+                 field[0].data[x][y] =666;}} // end hz-field update
+
+             // * Update ex-field
+             for (auto y =gh; y < field[0].dy-1;++y){
+               for (auto x =gh; x <   field[0].dx-1 ;++x){
+                 field[1].data[x][y] =666;}} // end ex-field update
+
+             // * Update ey-field
+             for (auto y =gh; y < field[0].dy-1;++y){
+               for (auto x =gh; x <   field[0].dx-1 ;++x){
+                 field[2].data[x][y] =666;}} // end ey-field update
+
+               return field;
            }
+
+
+
+
+
          return field;
 }
 
@@ -440,23 +416,8 @@ vector<Matrix> &  YeeScheme::iterateSolution(int tStep, YeeScheme::ModeOptions m
     {
   //updateBoundary(YeeScheme::NEUMANN_BOUNDARY);
 
-              updateBoundary(YeeScheme::TEST, it);
-            //   updateDz();
-            //      cout <<"field[1] is :\n"<<field[1]<<"\n";
-            //        updateBoundary(YeeScheme::TEST, it);
-            //      
-            //        updatePulse(tStep);
-            //        updateBoundary(YeeScheme::TEST, it);
-            //        
-            //        updateEz();
-            //        updateBoundary(YeeScheme::TEST, it);
-            //      
-            //        updateHx();
-            //        updateBoundary(YeeScheme::TEST, it);
-            //      
-            //        updateHy();
-            // 
-
+              updateBoundary(YeeScheme::DIRICHLET_BOUNDARY, it);
+              updateInterior(YeeScheme::TEST_CASE, it);
   it->PrintToFile(tStep);
 
   //updateBoundary(YeeScheme::TEST, it);
@@ -508,7 +469,7 @@ int main(int argc, char* argv[])
             {
               //        cout<< "*****Iteration step:"<< n<<"******" << endl;
               T= T+1;
-              yee.iterateSolution(T, YeeScheme::TM_MODE);
+              yee.iterateSolution(T, YeeScheme::TEST_CASE);
               //field[0].PrintToFile(T);
             }
         } //end tm-mode case
