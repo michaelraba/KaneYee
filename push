@@ -1,6 +1,7 @@
     echo "commitMsg:"
     read -r commitMsg 
+    echo $commitMsg
 
     git add -A
-    git commit -m '$commitMsg'
+    git commit -m "$commitMsg"
     git push
