@@ -83,7 +83,7 @@ public:
   enum PulseOptions { GAUSS_SOURCE, SINE_SOURCE /*...*/ };
   enum BoundaryOptions { NEUMANN_BOUNDARY, DIRICHLET_BOUNDARY, TEST /*...*/ };
   enum ModeOptions { TM_MODE, TE_MODE, TEST_CASE /*...*/}; //maybe this enum belongs in main!
-  vector<Matrix> & updateInterior(ModeOptions, vector<Matrix>::iterator it );
+  vector<Matrix> & updateInterior(ModeOptions, vector<Matrix>::iterator it , int tStep);
   vector<Matrix> & iterateSolution(int tStep, ModeOptions);
   vector<Matrix> & updateBoundary(BoundaryOptions);
   vector<Matrix> & updateBoundary(BoundaryOptions, vector<Matrix>::iterator it);
@@ -213,7 +213,7 @@ vector<Matrix> & YeeScheme::updateBoundary(YeeScheme::BoundaryOptions b, vector<
                        } /* end boundary->horizontal*/ 
 
          
-     cout<< "DirichletBdyWithParameters:\n"<< *it << endl;
+                       //cout<< "DirichletBdyWithParameters:\n"<< *it << endl;
         return field;}
 
     case TEST:
@@ -252,7 +252,7 @@ vector<Matrix> & YeeScheme::updatePulse(int tStep)
   double spread = 6.0;
   double T = tStep;
   double t0= 20.0;
-  double  pulse = exp(-0.5*(pow((t0-T)/spread,2)));
+  double  pulse = 300*exp(-0.5*(pow((t0-T)/spread,2)));
   cout <<"********* PulseValue is = "<< pulse<<"\n"<<endl;
    field[0].data[ic][jc] = pulse;
   //field[0].data[ic][jc] = 777;
@@ -349,11 +349,10 @@ private:
 
      Uses the vector field tuple (Ez, Hx,Hy) which is stored in the vectors of matrices vector<Matrix>. The tuple is updated according to the rules as described in Yee. 
 */
-vector<Matrix> &  YeeScheme::updateInterior(YeeScheme::ModeOptions m, vector<Matrix>::iterator it)
+vector<Matrix> &  YeeScheme::updateInterior(YeeScheme::ModeOptions m, vector<Matrix>::iterator it, int tStep)
 {
          switch (m)
            {
-
              /*
                |---------+----------------------------|
                | Tm Mode |                            |
@@ -367,32 +366,56 @@ vector<Matrix> &  YeeScheme::updateInterior(YeeScheme::ModeOptions m, vector<Mat
                | ga      | field[4]                   |
                |---------+----------------------------| */
            case TM_MODE: 
+             cout<< "@@@@@@Distance is: "<<std::distance(field.begin(),it) <<endl;
+             if (std::distance(it, field.begin()) == 0)
+               {
+                 cout<<"fuckYeahDz!\n";
              // * Update dz-field
              for (auto y =gh; y < field[0].dy-1;++y){ //fixed for spurious boundary!
                for (auto x =gh; x <   field[0].dx-1 ;++x){
                  field[0].data[x][y] +=  + 0.5*(field[2].data[x][y] - field[2].data[x-1][y] - field[1].data[x][y] + field[1].data[x][y-1] );
                }} // end for loop
-
+             cout<<"dzField sei:\n"<<field[0]<<"\n\n";
+             //cout<<"dzField sei:";
              // needs to update boundary for each field iteration!
+             return field;
+}
 
+             //        if (std::distance(it, field.begin()) == 1)
+             //          {
+             //        // * Update ez-field
+             //        for (auto y =gh; y < field[0].dy-1;++y){
+             //          for (auto x =gh; x <   field[0].dx-1 ;++x){
+             //            // field[4].data[x][y] +=  0 ; /* *todo* */
+             //          }} //end ez-field update
+             //        return field; 
+             //          } // end iterator if
 
-             // * Update ez-field
-             for (auto y =gh; y < field[0].dy-1;++y){
-               for (auto x =gh; x <   field[0].dx-1 ;++x){
-                 // field[4].data[x][y] +=  0 ;
-               }} //end ez-field update
-
+             else if (std::distance(field.begin(),it) == 1)
+               {
+                 updatePulse(tStep); //just update before hx..
+                 cout<<"fuckYeahHx!\n";
              // * Update hx-field
              for (auto y =gh; y < field[0].dy-1;++y){
                for (auto x =gh; x <   field[0].dx-1 ;++x){
                  field[1].data[x][y] +=  + 0.5*(field[3].data[x][y] - field[3].data[x][y+1] );}} // end hx-field update
+             cout<<"hxField sei:\n"<<field[1]<<"\n\n";
 
+             return field;
+               }
+
+
+             else if (std::distance(field.begin(),it) == 2)
+               {
+                 cout<<"fuckYeahHy!\n";
              // * Update hy-field
              for (auto y =gh; y < field[0].dy-1;++y){
                for (auto x =gh; x <   field[0].dx-1 ;++x){
                  field[2].data[x][y] += + 0.5*(field[3].data[x+1][y] - field[3].data[x][y] ); 
                }}  // end hy-field update
-               return field; //after done updating ez,hx,hy return all fields..
+             cout<<"hyField sei:\n"<<field[2]<<"\n\n";
+             return field;
+               }
 
              /*
              |---------+----------------------------|
@@ -441,17 +464,15 @@ vector<Matrix> &  YeeScheme::updateInterior(YeeScheme::ModeOptions m, vector<Mat
 
                return field;
            }
-
-
-
-
-
          return field;
 }
 
 
-// TM-mode 
-// Returns: vector a matrices containing Ez, Hx, Hy
+// fix this...the iterator currently is neceesary because updateboundary uses it.
+// buuuut updateinterior does not..
+// we still need to implent:
+// check what iteration it is..then do only that case..
+// with updateboundary !
 vector<Matrix> &  YeeScheme::iterateSolution(int tStep, YeeScheme::ModeOptions m)
 { 
   vector<Matrix>::iterator it;
@@ -460,11 +481,9 @@ vector<Matrix> &  YeeScheme::iterateSolution(int tStep, YeeScheme::ModeOptions m
   for(vector<Matrix>::iterator it = field.begin(); it!=field.end()-1; it++)
     {
   //updateBoundary(YeeScheme::NEUMANN_BOUNDARY);
-
-              updateBoundary(YeeScheme::DIRICHLET_BOUNDARY, it);
-              updatePulse(tStep);
-              updateInterior(YeeScheme::TE_MODE, it);
-  it->PrintToFile(tStep);
+      updateInterior(YeeScheme::TM_MODE, it, tStep );
+      //updateBoundary(YeeScheme::DIRICHLET_BOUNDARY, it);
+      //it->PrintToFile(tStep);
 
   //updateBoundary(YeeScheme::TEST, it);
     }
@@ -496,7 +515,7 @@ int main(int argc, char* argv[])
     epsz=8.8e-12;
     pi=3.14159;
 
-
+    cout<<"^^^^^^^^^^^^^Begin Iterates:\n";
     ModeOptions m;
     switch (m)
       {
@@ -513,7 +532,7 @@ int main(int argc, char* argv[])
           // i maybe do not create the yee object in main. Ok.
           for(n=1; n<nsteps; ++n)
             {
-              //        cout<< "*****Iteration step:"<< n<<"******" << endl;
+                      cout<< "*****Iteration step:"<< n<<"******" << endl;
               T= T+1;
               yee.iterateSolution(T, YeeScheme::TEST_CASE);
               //field[0].PrintToFile(T);
@@ -532,9 +551,9 @@ int main(int argc, char* argv[])
           // i maybe do not create the yee object in main. Ok.
           for(n=1; n<nsteps; ++n)
             {
-              //        cout<< "*****Iteration step:"<< n<<"******" << endl;
+                      cout<< "*****Iteration step:"<< n<<"******" << endl;
               T= T+1;
-              yee.iterateSolution(T, YeeScheme::TE_MODE);
+              yee.iterateSolution(T, YeeScheme::TM_MODE);
               //field[0].PrintToFile(T);
             }
         } //end te-mode case
