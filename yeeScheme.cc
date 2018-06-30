@@ -30,8 +30,8 @@ int ghLinks=1;
 int ghRechts=1;
 // IE,JE is total mx size ie if interior is 2x2, bdy=1,gh=1,
 // then IE=5.
-int IE = 30+2*gh-1; // really this is grid and boundary data. //ie,je first number was 5, changing to 200...
-int JE = 30+2*gh-1; // does't need to be a global var.
+int IE = 60+2*gh-1; // really this is grid and boundary data. //ie,je first number was 5, changing to 200...
+int JE = 60+2*gh-1; // does't need to be a global var.
 // encapsulate in bdy func, then can pass as data var in matrixhand maybe..
 // 
 
@@ -366,17 +366,14 @@ vector<Matrix> &  YeeScheme::updateInterior(YeeScheme::ModeOptions m, vector<Mat
                | ga      | field[4]                   |
                |---------+----------------------------| */
            case TM_MODE: 
-             cout<< "@@@@@@Distance is: "<<std::distance(field.begin(),it) <<endl;
              if (std::distance(it, field.begin()) == 0)
                {
-                 cout<<"fuckYeahDz!\n";
+                 cout<<"Dz!\n";
              // * Update dz-field
              for (auto y =gh; y < field[0].dy-1;++y){ //fixed for spurious boundary!
                for (auto x =gh; x <   field[0].dx-1 ;++x){
                  field[0].data[x][y] +=  + 0.5*(field[2].data[x][y] - field[2].data[x-1][y] - field[1].data[x][y] + field[1].data[x][y-1] );
                }} // end for loop
-             cout<<"dzField sei:\n"<<field[0]<<"\n\n";
-             //cout<<"dzField sei:";
              // needs to update boundary for each field iteration!
              return field;
 }
@@ -395,25 +392,23 @@ vector<Matrix> &  YeeScheme::updateInterior(YeeScheme::ModeOptions m, vector<Mat
                {
                  updatePulse(tStep); //just update before hx..
                  cout<<"dzField SecondPrint:\n"<<field[0]<<"\n\n";
-                 cout<<"fuckYeahHx!\n";
+                 cout<<"Hx!\n";
              // * Update hx-field
              for (auto y =gh; y < field[0].dy-1;++y){
                for (auto x =gh; x <   field[0].dx-1 ;++x){
                  field[1].data[x][y] +=  + 0.5*(field[0].data[x][y] - field[0].data[x][y+1] );}} // end hx-field update
-             cout<<"hxField sei:\n"<<field[1]<<"\n\n";
              return field;
                }
 
 
              else if (std::distance(field.begin(),it) == 2)
                {
-                 cout<<"fuckYeahHy!\n";
+                 cout<<"Hy!\n";
              // * Update hy-field
              for (auto y =gh; y < field[0].dy-1;++y){
                for (auto x =gh; x <   field[0].dx-1 ;++x){
                  field[2].data[x][y] += + 0.5*(field[0].data[x+1][y] - field[0].data[x][y] ); 
                }}  // end hy-field update
-             cout<<"hyField sei:\n"<<field[2]<<"\n\n";
              return field;
                }
 
@@ -432,6 +427,7 @@ vector<Matrix> &  YeeScheme::updateInterior(YeeScheme::ModeOptions m, vector<Mat
              if (std::distance(it, field.begin()) == 0)
                {
              // * Update hz-field
+                 cout<<"hzFld\n";
              for (auto y =gh; y < field[0].dy-1;++y){
                for (auto x =gh; x <   field[0].dx-1 ;++x){
                  field[0].data[x][y] +=.5*(field[2].data[x][y]-field[2].data[x+1][y])+.5*(field[1].data[x][y+1]-field[1].data[x][y])  ;}} // end hz-field update
@@ -440,6 +436,7 @@ vector<Matrix> &  YeeScheme::updateInterior(YeeScheme::ModeOptions m, vector<Mat
 
              else if (std::distance(it, field.begin()) == 1)
                {
+                 cout<<"exFld\n";
              // * Update ex-field
              for (auto y =gh; y < field[0].dy-1;++y){
                for (auto x =gh; x <   field[0].dx-1 ;++x){
@@ -449,6 +446,7 @@ vector<Matrix> &  YeeScheme::updateInterior(YeeScheme::ModeOptions m, vector<Mat
 
              else if (std::distance(it, field.begin()) == 2)
                {
+                 cout<<"eyFld\n";
              // * Update ey-field
              for (auto y =gh; y < field[0].dy-1;++y){
                for (auto x =gh; x <   field[0].dx-1 ;++x){
