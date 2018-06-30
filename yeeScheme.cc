@@ -30,8 +30,8 @@ int ghLinks=1;
 int ghRechts=1;
 // IE,JE is total mx size ie if interior is 2x2, bdy=1,gh=1,
 // then IE=5.
-int IE = 200+2*gh-1; // really this is grid and boundary data. //ie,je first number was 5, changing to 200...
-int JE = 200+2*gh-1; // does't need to be a global var.
+int IE = 30+2*gh-1; // really this is grid and boundary data. //ie,je first number was 5, changing to 200...
+int JE = 30+2*gh-1; // does't need to be a global var.
 // encapsulate in bdy func, then can pass as data var in matrixhand maybe..
 // 
 
@@ -428,22 +428,34 @@ vector<Matrix> &  YeeScheme::updateInterior(YeeScheme::ModeOptions m, vector<Mat
              | ey      | field[2]                   |
              |---------+----------------------------| */
            case TE_MODE:
+
+             if (std::distance(it, field.begin()) == 0)
+               {
              // * Update hz-field
              for (auto y =gh; y < field[0].dy-1;++y){
                for (auto x =gh; x <   field[0].dx-1 ;++x){
                  field[0].data[x][y] +=.5*(field[2].data[x][y]-field[2].data[x+1][y])+.5*(field[1].data[x][y+1]-field[1].data[x][y])  ;}} // end hz-field update
+             return field;
+               }
 
+             else if (std::distance(it, field.begin()) == 1)
+               {
              // * Update ex-field
              for (auto y =gh; y < field[0].dy-1;++y){
                for (auto x =gh; x <   field[0].dx-1 ;++x){
                  field[1].data[x][y] += .5*( field[2].data[x][y] - field[2].data[x][y-1] );}} // end ex-field update
+             return field;
+               }
 
+             else if (std::distance(it, field.begin()) == 2)
+               {
              // * Update ey-field
              for (auto y =gh; y < field[0].dy-1;++y){
                for (auto x =gh; x <   field[0].dx-1 ;++x){
                  field[2].data[x][y] += .5*(field[2].data[x][y] - field[2].data[x-1][y])  ;}} // end ey-field update
-
              return field;
+               }
+
 
            case TEST_CASE:
              
@@ -516,7 +528,8 @@ int main(int argc, char* argv[])
     pi=3.14159;
 
     cout<<"^^^^^^^^^^^^^Begin Iterates:\n";
-    ModeOptions m;
+    ModeOptions m = TE_MODE;
+    
     switch (m)
       {
       case TM_MODE:
