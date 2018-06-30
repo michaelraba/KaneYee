@@ -394,13 +394,13 @@ vector<Matrix> &  YeeScheme::updateInterior(YeeScheme::ModeOptions m, vector<Mat
              else if (std::distance(field.begin(),it) == 1)
                {
                  updatePulse(tStep); //just update before hx..
+                 cout<<"dzField SecondPrint:\n"<<field[0]<<"\n\n";
                  cout<<"fuckYeahHx!\n";
              // * Update hx-field
              for (auto y =gh; y < field[0].dy-1;++y){
                for (auto x =gh; x <   field[0].dx-1 ;++x){
-                 field[1].data[x][y] +=  + 0.5*(field[3].data[x][y] - field[3].data[x][y+1] );}} // end hx-field update
+                 field[1].data[x][y] +=  + 0.5*(field[0].data[x][y] - field[0].data[x][y+1] );}} // end hx-field update
              cout<<"hxField sei:\n"<<field[1]<<"\n\n";
-
              return field;
                }
 
@@ -411,7 +411,7 @@ vector<Matrix> &  YeeScheme::updateInterior(YeeScheme::ModeOptions m, vector<Mat
              // * Update hy-field
              for (auto y =gh; y < field[0].dy-1;++y){
                for (auto x =gh; x <   field[0].dx-1 ;++x){
-                 field[2].data[x][y] += + 0.5*(field[3].data[x+1][y] - field[3].data[x][y] ); 
+                 field[2].data[x][y] += + 0.5*(field[0].data[x+1][y] - field[0].data[x][y] ); 
                }}  // end hy-field update
              cout<<"hyField sei:\n"<<field[2]<<"\n\n";
              return field;
@@ -482,7 +482,7 @@ vector<Matrix> &  YeeScheme::iterateSolution(int tStep, YeeScheme::ModeOptions m
     {
   //updateBoundary(YeeScheme::NEUMANN_BOUNDARY);
       updateInterior(YeeScheme::TM_MODE, it, tStep );
-      //updateBoundary(YeeScheme::DIRICHLET_BOUNDARY, it);
+      updateBoundary(YeeScheme::DIRICHLET_BOUNDARY, it);
       //it->PrintToFile(tStep);
 
   //updateBoundary(YeeScheme::TEST, it);
@@ -534,7 +534,7 @@ int main(int argc, char* argv[])
             {
                       cout<< "*****Iteration step:"<< n<<"******" << endl;
               T= T+1;
-              yee.iterateSolution(T, YeeScheme::TEST_CASE);
+              yee.iterateSolution(T, YeeScheme::TM_MODE);
               //field[0].PrintToFile(T);
             }
         } //end tm-mode case
@@ -553,7 +553,7 @@ int main(int argc, char* argv[])
             {
                       cout<< "*****Iteration step:"<< n<<"******" << endl;
               T= T+1;
-              yee.iterateSolution(T, YeeScheme::TM_MODE);
+              yee.iterateSolution(T, YeeScheme::TE_MODE);
               //field[0].PrintToFile(T);
             }
         } //end te-mode case
