@@ -30,8 +30,8 @@ int ghLinks=1;
 int ghRechts=1;
 // IE,JE is total mx size ie if interior is 2x2, bdy=1,gh=1,
 // then IE=5.
-int IE = 5+2*gh-1; // really this is grid and boundary data.
-int JE = 5+2*gh-1; // does't need to be a global var.
+int IE = 200+2*gh-1; // really this is grid and boundary data. //ie,je first number was 5, changing to 200...
+int JE = 200+2*gh-1; // does't need to be a global var.
 // encapsulate in bdy func, then can pass as data var in matrixhand maybe..
 // 
 
@@ -252,7 +252,7 @@ vector<Matrix> & YeeScheme::updatePulse(int tStep)
   double spread = 6.0;
   double T = tStep;
   double t0= 20.0;
-  double  pulse = 300*exp(-0.5*(pow((t0-T)/spread,2)));
+  double  pulse = 1*exp(-0.5*(pow((t0-T)/spread,2)));
   cout <<"********* PulseValue is = "<< pulse<<"\n"<<endl;
    field[0].data[ic][jc] = pulse;
   //field[0].data[ic][jc] = 777;
@@ -483,7 +483,7 @@ vector<Matrix> &  YeeScheme::iterateSolution(int tStep, YeeScheme::ModeOptions m
   //updateBoundary(YeeScheme::NEUMANN_BOUNDARY);
       updateInterior(YeeScheme::TM_MODE, it, tStep );
       updateBoundary(YeeScheme::DIRICHLET_BOUNDARY, it);
-      //it->PrintToFile(tStep);
+      it->PrintToFile(tStep);
 
   //updateBoundary(YeeScheme::TEST, it);
     }
