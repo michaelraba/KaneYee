@@ -39,8 +39,6 @@ private:
   int dx, dy;
 };
 
-
-
 Matrix::Matrix(int sizeX, int sizeY) : dx(sizeX), dy(sizeY)
 { 
   assert(sizeX > 0 && sizeY > 0);
@@ -108,7 +106,6 @@ public:
 private:
     vector<Matrix> field;  // need to initialize these in constructur...
 };
-
 // ********************************
 // Constructor for YeeScheme Class
 // ********************************
@@ -121,7 +118,6 @@ YeeScheme::YeeScheme(vector<Matrix> m)
 { 
   field=m; 
 }
-
 
 ostream &operator<<(ostream &out, const Matrix &m)
 {
@@ -207,12 +203,8 @@ vector<Matrix> & YeeScheme::updateBoundary(YeeScheme::BoundaryOptions b, vector<
   return field;
 }
 
-
 vector<Matrix> & YeeScheme::updateBoundary(vector<YeeScheme::BoundaryOptions> b, vector<Matrix>::iterator it)
 {
-
-
-
 
   //  switch (b)
   //    {
