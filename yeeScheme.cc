@@ -1,69 +1,83 @@
-// ஜஜஜஜஜஜஜஜஜஜஜஜஜஜஜஜஜஜஜ
-// ஜ Raba FDTD Scheme (Yee)      ஜ 
-// ஜ Copyright Raba (c) 2018     ஜ 
-// ஜ No distribuir               ஜ 
-// ஜஜஜஜஜஜஜஜஜஜஜஜஜஜஜஜஜஜஜ▬▬▬▬▬▬▬▬▬
-
-
-/*
- * Numerical solution of initial boundary value problems involving maxwell's equations in isotropic media
- * Todo-add Pml 
- */
-
 #include<iostream>
-#include<fstream>
-#include<sstream>
 #include<iomanip>
 #include<vector>
 #include<cassert>
-#include <cstddef>
+#include<fstream>
+#include<sstream>
 #include<cmath>
-//#include<boost/filesystem.hpp>
-//#include<mpi.h>
-//#include<memory>
+
 using namespace std;
 
 int gh=1;
-int ghOben=1;
-int ghUnten=1;
-int ghLinks=1;
-int ghRechts=1;
-// IE,JE is total mx size ie if interior is 2x2, bdy=1,gh=1,
-// then IE=5.
-int IE = 60+2*gh-1; // really this is grid and boundary data. //ie,je first number was 5, changing to 200...
-int JE = 60+2*gh-1; // does't need to be a global var.
-// encapsulate in bdy func, then can pass as data var in matrixhand maybe..
-// 
+int IE = 4+2*gh-1; // really this is grid and boundary data. //ie,je first number was 5, changing to 200...
+int JE = 4+2*gh-1; // does't need to be a global var.
 
+// define Pi=3.1415
+constexpr double pi() { return std::atan(1)*4; }
 
 class Matrix
 {
-    friend class YeeScheme;
-    public:
-        Matrix(int sizeX, int sizeY);
-        int GetSizeX() const{return dx;}
-        int GetSizeY() const{return dy;}
-        double &Element(int x, int y);
-        void Print() const;
+  friend class YeeScheme;
+public:
+  Matrix(int sizeX, int sizeY);
+  int GetSizeX() const{return dx;}
+  int GetSizeY() const{return dy;}
+  double &Element(int x, int y);
+  void Print() const;
   void PrintToFile(int tstep) ;
-        void makeIdentity() ;
+  void makeIdentity() ;
 
   friend ostream &operator<<(ostream &out, const Matrix &m);
-        friend Matrix operator+(Matrix m1, Matrix m2);
-        friend Matrix operator*(int fac, Matrix m1);
-        friend Matrix operator*(Matrix m1, int fac);
-        friend Matrix operator*(Matrix m1, Matrix m2);
-        double &operator()(int x, int y);
+  friend Matrix operator+(Matrix m1, Matrix m2);
+  friend Matrix operator*(int fac, Matrix m1);
+  friend Matrix operator*(Matrix m1, int fac);
+  friend Matrix operator*(Matrix m1, Matrix m2);
+  double &operator()(int x, int y);
 
-    private:
-       vector<vector<double> > data;
-        int dx, dy;
+private:
+  vector<vector<double> > data;
+  int dx, dy;
 };
 
 
-//“Grau, teurer Freund, ist alle Theorie und grün des Lebens goldner Baum.”
-// Not even the coolest programming can substitute for solid mathematics.
-// Más vale tarde, que nunca 
+
+Matrix::Matrix(int sizeX, int sizeY) : dx(sizeX), dy(sizeY)
+{ 
+  assert(sizeX > 0 && sizeY > 0);
+  for(auto i=0; i<dx; ++i)
+    {
+      vector<double> temp;
+      // add for i loop here..
+      for(auto j =0; j < dy; ++j)
+        temp.push_back(0);
+      data.push_back(temp);
+    }
+}
+
+double &Matrix::operator()(int x,int y)
+{
+  assert(x >= 0 && x < dx && y >= 0 && y < dy);
+  return this->data[x][y];
+}
+
+void Matrix::makeIdentity() 
+{
+    for (  auto x =0; x < dx;++x)
+      for (auto y =0; y < dy;++y){
+      this->data[x][y] = 1;
+  }
+}
+
+//model function that works with correct constructor
+void Matrix::Print() const
+{
+  cout <<endl;
+  for(auto x =0; x < dx; ++x){
+    for(auto y =0; y < dy; ++y)
+      cout << setprecision(3)<< scientific << data[x][y]<< "\t";
+    cout<<endl;
+  } }
+
 
 class YeeScheme{
 friend class Matrix;
@@ -79,14 +93,18 @@ public:
   vector<Matrix> & updateHx();
   vector<Matrix> & updateHy();
   */
-  vector<Matrix> & updatePulse(int tStep);
   enum PulseOptions { GAUSS_SOURCE, SINE_SOURCE /*...*/ };
-  enum BoundaryOptions { NEUMANN_BOUNDARY, DIRICHLET_BOUNDARY, TEST /*...*/ };
+  vector<Matrix> & updatePulse(int tStep, PulseOptions);
+  enum BoundaryOptions { NEUMANN_BOUNDARY, DIRICHLET_BOUNDARY, TEST, BERENGER_PML /*...*/ };
   enum ModeOptions { TM_MODE, TE_MODE, TEST_CASE /*...*/}; //maybe this enum belongs in main!
   vector<Matrix> & updateInterior(ModeOptions, vector<Matrix>::iterator it , int tStep);
   vector<Matrix> & iterateSolution(int tStep, ModeOptions);
-  vector<Matrix> & updateBoundary(BoundaryOptions);
   vector<Matrix> & updateBoundary(BoundaryOptions, vector<Matrix>::iterator it);
+  // the first arg of updateboundary should be a vector!
+  // each entry of the vector is for the sides.
+  vector<BoundaryOptions> FourSidedBoundary;
+  vector<Matrix> & updateBoundary(vector<BoundaryOptions>, vector<Matrix>::iterator it);
+  vector<Matrix> & updatePML(BoundaryOptions, vector<Matrix>::iterator it);
 private:
     vector<Matrix> field;  // need to initialize these in constructur...
 };
@@ -105,71 +123,19 @@ YeeScheme::YeeScheme(vector<Matrix> m)
 }
 
 
-void YeeScheme::Print(){
-	std::cout << "Five Field: " << endl;
-  //	for(int i = 0; i < NUMER_OF_MATRICES; ++i){matrices[i].Print();}
-	//std::cout << "Its rank is: ";
-	//hand_rank.print();
-}
-
-// ********************************
-// Constructor for Matrix Class
-// ********************************
-Matrix::Matrix(int sizeX, int sizeY) : dx(sizeX), dy(sizeY)
-  { 
-  assert(sizeX > 0 && sizeY > 0);
-    for(auto j=0; j<dy; ++j)
-  {
-  vector<double> temp;
-    // add for i loop here..
-  for(auto i =0; i < dx; ++i)
-  temp.push_back(0);
-  data.push_back(temp);
-  }
-}
-
 ostream &operator<<(ostream &out, const Matrix &m)
 {
-  for(int y=0; y< m.dy; ++y){
-    for(int x=0; x< m.dx; ++x)
+  for(int x=0; x< m.dx; ++x){
+      for(int y=0; y< m.dy; ++y)
       //out << m.data[x][y] << "\t";
       //out<< endl;
 
- out << setprecision(2)<< scientific << m.data[x][y]<< "\t\t";
- out<<endl;
+      out << setprecision(2)<< scientific << m.data[x][y]<< "\t\t";
+    out<<endl;
+  }
+  return out;       
 }
- return out;       
-}
 
-void Matrix::makeIdentity() 
-{
-  for (auto y =0; y < dy;++y){
-  for (  auto x =0; x < dx;++x)
-      this->data[x][y] = 1;
-  } }
-
-/* Function: updateBoundary()
- * parameters:
- ** boundaryOptions m
- ** iterator it
- * Returns: the matrix of vector fields
-
-Description: Updates the boundary (ie. non-interior and not the PML region)
- boundaryoptions are:
- *** DIRICHLET_BOUNDARY
- Updates according to the rule
-
-     $\Phi_0 = \Phi_1$,
-
- where $Phi$ is the current field (ie Hz, Ex, etc) that the iterator it points to
- *** NEUMANN_BOUNDARY
-
- Updates according to the rule
-
- $\Phi_0 = -\Phi_1$,
-
- where $Phi$ is the current field (ie Hz, Ex, etc) that the iterator it points to
-*/
 vector<Matrix> & YeeScheme::updateBoundary(YeeScheme::BoundaryOptions b, vector<Matrix>::iterator it)
 {
   switch (b)
@@ -242,11 +208,111 @@ vector<Matrix> & YeeScheme::updateBoundary(YeeScheme::BoundaryOptions b, vector<
 }
 
 
-// IMPORTANT NOTE: x,y was = 1, changed to 0
-// to experiment...
-
-vector<Matrix> & YeeScheme::updatePulse(int tStep)
+vector<Matrix> & YeeScheme::updateBoundary(vector<YeeScheme::BoundaryOptions> b, vector<Matrix>::iterator it)
 {
+
+
+
+
+  //  switch (b)
+  //    {
+  //    case NEUMANN_BOUNDARY:
+  //      {
+  //
+  //                       /********  GhostPoint! ********* / 
+  //                                  /*ghostPointLoop->vertical*/
+  //                       for (auto x =0; x <   it->dx ;++x){
+  //                         //for (auto y =1; y < it->dy-1;++y){
+  //                         it->data[x][0] = it->data[x][1]; // 88888; //ghostpointOben
+  //                           it->data[x][JE-gh] = it->data[x][JE-gh-1]; // 666666; //ghostpointUnten
+  //                       } /* end boundary->vertical*/ 
+  //
+  //                       /* ghostPointLoop->horizontal*/
+  //                       //for (auto x =gh; x <   it->dx-1 ;++x){
+  //                       for (auto y =0; y < it->dy;++y){ //do this one for horiz..
+  //                         it->data[0][y] =it->data[1][y] ; //      444444;
+  //                         it->data[JE-gh][y] =it->data[JE-gh-1][y]  ; //555555;
+  //                       } /* end boundary->horizontal*/ 
+  //  return field;
+  //      }
+  //
+  //    case DIRICHLET_BOUNDARY:
+  //      {cout<<"";
+  //
+  //                       /********  GhostPoint! ********* / 
+  //                                  /*ghostPointLoop->vertical*/
+  //                       for (auto x =0; x <   it->dx ;++x){
+  //                         //for (auto y =1; y < it->dy-1;++y){
+  //                         it->data[x][0] = (-1)*it->data[x][1]; // 88888; //ghostpointOben0;
+  //                         it->data[x][JE-gh] = (-1)*it->data[x][JE-gh-1];;
+  //                       } /* end boundary->vertical*/ 
+  //
+  //                       /* ghostPointLoop->horizontal*/
+  //                       //for (auto x =gh; x <   it->dx-1 ;++x){
+  //                       for (auto y =0; y < it->dy;++y){ //do this one for horiz..
+  //                         it->data[0][y] =(-1)*it->data[1][y] ;;
+  //                         it->data[JE-gh][y] =(-1)*it->data[JE-gh-1][y]  ;
+  //                       } /* end boundary->horizontal*/ 
+  //
+  //         
+  //                       //cout<< "DirichletBdyWithParameters:\n"<< *it << endl;
+  //        return field;}
+  //
+  //    case TEST:
+  //      {
+  //
+  //                       /********  GhostPoint! ********* / 
+  //                                  /*ghostPointLoop->vertical*/
+  //                       for (auto x =0; x <   it->dx ;++x){
+  //                         //for (auto y =1; y < it->dy-1;++y){
+  //                         it->data[x][0] =  88888; //ghostpointOben
+  //                           it->data[x][JE-gh] = 666666; //ghostpointUnten
+  //                       } /* end boundary->vertical*/ 
+  //
+  //                       /* ghostPointLoop->horizontal*/
+  //                       //for (auto x =gh; x <   it->dx-1 ;++x){
+  //                       for (auto y =0; y < it->dy;++y){ //do this one for horiz..
+  //                         it->data[0][y] =444444;
+  //                         it->data[JE-gh][y] =555555;
+  //                       } /* end boundary->horizontal*/ 
+  //
+  //                          cout<< "Oink!\n";
+  //                          it->Print();
+  //        return field;}
+  //    }
+  return field;
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+vector<Matrix> & YeeScheme::updatePulse(int tStep, PulseOptions p)
+{
+
+  switch (p)
+    {
+    case GAUSS_SOURCE:
+      {
   int ic = IE/2;
   int jc = JE/2;
   double spread = 6.0;
@@ -256,17 +322,21 @@ vector<Matrix> & YeeScheme::updatePulse(int tStep)
   cout <<"********* PulseValue is = "<< pulse<<"\n"<<endl;
    field[0].data[ic][jc] = pulse;
   //field[0].data[ic][jc] = 777;
+      } //end gauss_source case
+    case SINE_SOURCE:
+      {
+        int ic = IE/2;
+        int jc = JE/2;
+        float ddx = 0.01;
+        float dt = ddx/6e8;
+        double spread = 6.0;
+        double T = tStep;
+        double t0= 20.0;
+        double  pulse = 2*pi()*1500*1e6*dt*T;
+      } //end sine_source case
+    }
   return field;
 }
-
-void Matrix::Print() const
-{
-cout <<endl;
- for(auto y =0; y < dy; ++y){
-for(auto x =0; x < dx; ++x)
-  cout << setprecision(3)<< scientific << data[x][y]<< "\t";
-cout<<endl;
-} }
 
 void Matrix::PrintToFile(int tstep) 
 {
@@ -289,11 +359,6 @@ void Matrix::PrintToFile(int tstep)
   fieldOutput.close();
 }
 
-double &Matrix::operator()(int x,int y)
-{
-assert(x >= 0 && x < dx && y >= 0 && y < dy);
-return this->data[x][y];
-}
 
 
 Matrix operator+(Matrix m1, Matrix m2)
@@ -307,28 +372,6 @@ return result;
 }
 
 
-class grid{
-  // friend class Matrix;
-public:
-  grid();
-  // grid(vector<Matrix> m);
-private:
-  int x;
-  int y;
-};
-
-
-class boundaryValues{
-  friend class Matrix;
-  friend class YeeScheme;
-public:
-  boundaryValues();
-  vector<Matrix> & writeBoundary();
-  // grid(vector<Matrix> m);
-private:
-  int x;
-  int y;
-};
 
 
 /* Function: updateInterior()
@@ -370,8 +413,8 @@ vector<Matrix> &  YeeScheme::updateInterior(YeeScheme::ModeOptions m, vector<Mat
                {
                  cout<<"Dz!\n";
              // * Update dz-field
-             for (auto y =gh; y < field[0].dy-1;++y){ //fixed for spurious boundary!
                for (auto x =gh; x <   field[0].dx-1 ;++x){
+                 for (auto y =gh; y < field[0].dy-1;++y){ //fixed for spurious boundary!
                  field[0].data[x][y] +=  + 0.5*(field[2].data[x][y] - field[2].data[x-1][y] - field[1].data[x][y] + field[1].data[x][y-1] );
                }} // end for loop
              // needs to update boundary for each field iteration!
@@ -390,12 +433,12 @@ vector<Matrix> &  YeeScheme::updateInterior(YeeScheme::ModeOptions m, vector<Mat
 
              else if (std::distance(field.begin(),it) == 1)
                {
-                 updatePulse(tStep); //just update before hx..
+                 updatePulse(tStep, GAUSS_SOURCE); //just update before hx..
                  cout<<"dzField SecondPrint:\n"<<field[0]<<"\n\n";
                  cout<<"Hx!\n";
              // * Update hx-field
-             for (auto y =gh; y < field[0].dy-1;++y){
                for (auto x =gh; x <   field[0].dx-1 ;++x){
+                 for (auto y =gh; y < field[0].dy-1;++y){
                  field[1].data[x][y] +=  + 0.5*(field[0].data[x][y] - field[0].data[x][y+1] );}} // end hx-field update
              return field;
                }
@@ -405,8 +448,8 @@ vector<Matrix> &  YeeScheme::updateInterior(YeeScheme::ModeOptions m, vector<Mat
                {
                  cout<<"Hy!\n";
              // * Update hy-field
-             for (auto y =gh; y < field[0].dy-1;++y){
                for (auto x =gh; x <   field[0].dx-1 ;++x){
+                 for (auto y =gh; y < field[0].dy-1;++y){
                  field[2].data[x][y] += + 0.5*(field[0].data[x+1][y] - field[0].data[x][y] ); 
                }}  // end hy-field update
              return field;
@@ -428,18 +471,20 @@ vector<Matrix> &  YeeScheme::updateInterior(YeeScheme::ModeOptions m, vector<Mat
                {
              // * Update hz-field
                  cout<<"hzFld\n";
-             for (auto y =gh; y < field[0].dy-1;++y){
                for (auto x =gh; x <   field[0].dx-1 ;++x){
+                 for (auto y =gh; y < field[0].dy-1;++y){
                  field[0].data[x][y] +=.5*(field[2].data[x][y]-field[2].data[x+1][y])+.5*(field[1].data[x][y+1]-field[1].data[x][y])  ;}} // end hz-field update
              return field;
                }
 
              else if (std::distance(it, field.begin()) == 1)
                {
+
+                 updatePulse(tStep, GAUSS_SOURCE); //just update before ex...
                  cout<<"exFld\n";
              // * Update ex-field
-             for (auto y =gh; y < field[0].dy-1;++y){
                for (auto x =gh; x <   field[0].dx-1 ;++x){
+                 for (auto y =gh; y < field[0].dy-1;++y){
                  field[1].data[x][y] += .5*( field[2].data[x][y] - field[2].data[x][y-1] );}} // end ex-field update
              return field;
                }
@@ -448,8 +493,8 @@ vector<Matrix> &  YeeScheme::updateInterior(YeeScheme::ModeOptions m, vector<Mat
                {
                  cout<<"eyFld\n";
              // * Update ey-field
-             for (auto y =gh; y < field[0].dy-1;++y){
                for (auto x =gh; x <   field[0].dx-1 ;++x){
+                 for (auto y =gh; y < field[0].dy-1;++y){
                  field[2].data[x][y] += .5*(field[2].data[x][y] - field[2].data[x-1][y])  ;}} // end ey-field update
              return field;
                }
@@ -458,18 +503,18 @@ vector<Matrix> &  YeeScheme::updateInterior(YeeScheme::ModeOptions m, vector<Mat
            case TEST_CASE:
              
              // * Update hz-field
-             for (auto y =gh; y < field[0].dy-1;++y){
                for (auto x =gh; x <   field[0].dx-1 ;++x){
+                 for (auto y =gh; y < field[0].dy-1;++y){
                  field[0].data[x][y] =666;}} // end hz-field update
 
              // * Update ex-field
-             for (auto y =gh; y < field[0].dy-1;++y){
                for (auto x =gh; x <   field[0].dx-1 ;++x){
+                 for (auto y =gh; y < field[0].dy-1;++y){
                  field[1].data[x][y] =666;}} // end ex-field update
 
              // * Update ey-field
-             for (auto y =gh; y < field[0].dy-1;++y){
                for (auto x =gh; x <   field[0].dx-1 ;++x){
+                 for (auto y =gh; y < field[0].dy-1;++y){
                  field[2].data[x][y] =666;}} // end ey-field update
 
                return field;
@@ -488,17 +533,37 @@ vector<Matrix> &  YeeScheme::iterateSolution(int tStep, YeeScheme::ModeOptions m
   vector<Matrix>::iterator it;
   //  vector<Matrix> field = {dz,hx,hy,ez,ga};
   //  for(auto it = field.begin(); it!=field.end()-1; it++)
+  // 
+  vector<BoundaryOptions> sides = {YeeScheme::BERENGER_PML,YeeScheme::BERENGER_PML,YeeScheme::BERENGER_PML,YeeScheme::BERENGER_PML};
   for(vector<Matrix>::iterator it = field.begin(); it!=field.end()-1; it++)
     {
   //updateBoundary(YeeScheme::NEUMANN_BOUNDARY);
       updateInterior(YeeScheme::TM_MODE, it, tStep );
       updateBoundary(YeeScheme::DIRICHLET_BOUNDARY, it);
+      updateBoundary(sides, it);
       it->PrintToFile(tStep);
 
   //updateBoundary(YeeScheme::TEST, it);
     }
   return field;
 }
+
+
+
+
+//int main(int argc, char* argv[])
+//{
+//  Matrix foo(2,3);
+//  foo.Print(); // this prints
+//
+//  cout<<"Print Bar:\n";
+//  Matrix bar(3,2);
+//   bar.Print(); //this does not print
+//   bar.makeIdentity();
+//   bar.Print(); //this does not print
+//  
+//  return 0;
+//}
 
 int main(int argc, char* argv[])
 {
@@ -508,7 +573,6 @@ int main(int argc, char* argv[])
     float ddx,dt,T,epsz,pi,epsilon,sigma,eaf;
     float t0,spread,pulse;
     T  =0;
-
     if (argc == 1 )
       nsteps = 2;
     else
@@ -527,6 +591,7 @@ int main(int argc, char* argv[])
 
     cout<<"^^^^^^^^^^^^^Begin Iterates:\n";
     ModeOptions m = TE_MODE;
+    YeeScheme::BoundaryOptions b = YeeScheme::BERENGER_PML;
     
     switch (m)
       {
@@ -552,21 +617,36 @@ int main(int argc, char* argv[])
 
       case TE_MODE:
         {
-          Matrix ga(IE,JE); //auxillary matrices..
-          Matrix ex(IE,JE),ey(IE,JE),hz(IE,JE);
-          ga.makeIdentity();
-          int dSize = IE;
-          //where is ex, ey fields? haha! And Hz, lol.
-          vector<Matrix> field = {ex,ey,hz,ga};
-          YeeScheme yee(field); // how would i call yee without field?
-          // i maybe do not create the yee object in main. Ok.
-          for(n=1; n<nsteps; ++n)
+          switch(b)
             {
-                      cout<< "*****Iteration step:"<< n<<"******" << endl;
-              T= T+1;
-              yee.iterateSolution(T, YeeScheme::TE_MODE);
-              //field[0].PrintToFile(T);
-            }
+          case YeeScheme::BERENGER_PML:
+            {
+              cout<<"*******hi******";
+              int cellSize=4;
+              int IEx=IE+cellSize;
+              int JEx=JE+cellSize;
+              Matrix hzx(IEx,JEx),hzy(IEx,JEx);
+              Matrix experiment(IE,cellSize);
+              experiment.makeIdentity();
+              cout << "my experiment:\n"<<experiment;
+            } //end berenger_pml case
+            } //end boundary switch
+          //
+          //          Matrix ga(IE,JE); //auxillary matrices..
+          //          Matrix ex(IE,JE),ey(IE,JE),hz(IE,JE);
+          //          ga.makeIdentity();
+          //          int dSize = IE;
+          //          //where is ex, ey fields? haha! And Hz, lol.
+          //          vector<Matrix> field = {ex,ey,hz,ga};
+          //          YeeScheme yee(field); // how would i call yee without field?
+          //          // i maybe do not create the yee object in main. Ok.
+          //          for(n=1; n<nsteps; ++n)
+          //            {
+          //                      cout<< "*****Iteration step:"<< n<<"******" << endl;
+          //              T= T+1;
+          //              yee.iterateSolution(T, YeeScheme::TE_MODE);
+          //              //field[0].PrintToFile(T);
+          //            }
         } //end te-mode case
       }
 return 0;

@@ -1,0 +1,8 @@
+* Fuer die Konstantwerte siehe gl 7.60's, seite 293 tafl. buch..
+
+* $\sigma_w$ => siehe Gl. 7.60
+** $\sigma_s(x) = (x/d)^m \sigma_{x,max} \,\,(7.60)$
+** $\sigma_{x,max} = \frac{(m+1)\ln[R(0)]}{2\eta d }$
+
+
+* Fuer die diskretizierte form der PML siehe ...
