@@ -7,10 +7,12 @@
 #include<cmath>
 
 using namespace std;
-
+// deprecated constants...
 int gh=1;
 int IE = 4+2*gh-1; // really this is grid and boundary data. //ie,je first number was 5, changing to 200...
 int JE = 4+2*gh-1; // does't need to be a global var.
+
+vector<int> cellTopology = {0};
 
 // define Pi=3.1415
 constexpr double pi() { return std::atan(1)*4; }
@@ -137,6 +139,7 @@ class Cell : public Matrix
 {
  public:
   enum mTyp{ INTERIOR, PML, NEUMANN /*...*/}; //maybe this enum belongs in main!
+  enum ModeOptions { TM_MODE, TE_MODE, TEST_CASE, SHITS /*...*/}; //maybe this enum belongs in main!
   //  Cell();
   Cell(int sizeX, int sizeY) ;
   /* constructor for a matrix with:
@@ -150,7 +153,9 @@ class Cell : public Matrix
 
   // update sthe interior..
   Cell(int sizeX, int sizeY, mTyp typ) ;
-  vector<Matrix> updateInterior;
+  Cell(int sizeX, int sizeY, mTyp typ, ModeOptions mode) ;
+  //vector<Matrix> updateInterior;
+  vector<Matrix> & updateInterior(ModeOptions, mTyp, vector<Matrix>::iterator it , int tStep);
   // make method to format the cell as a pml or interior or neumann boundary..!
 
  private:
@@ -170,6 +175,7 @@ class Cell : public Matrix
 
 Cell::Cell(int sizeX, int sizeY) : Matrix(sizeX,sizeY)
 // : dx(sizeX), dy(sizeY)
+
 {
     assert(sizeX > 0 && sizeY > 0);
     for(auto i=0; i<dx; ++i){
@@ -190,7 +196,6 @@ Cell::Cell(int sizeX, int sizeY) : Matrix(sizeX,sizeY)
 // this should also ahve a TE or TM type option!
 Cell::Cell(int sizeX, int sizeY, mTyp typ) : Matrix(sizeX,sizeY)
 {
-
   switch (typ)
     {
     case PML: // create a pml matrix. 
@@ -212,6 +217,28 @@ Cell::Cell(int sizeX, int sizeY, mTyp typ) : Matrix(sizeX,sizeY)
     } // end switch 
       } //end constructor
 
+Cell::Cell(int sizeX, int sizeY, mTyp typ, ModeOptions mode) : Matrix(sizeX,sizeY)
+{
+  switch (typ)
+    {
+    case PML: // create a pml matrix. 
+      {
+        //  for(auto i=0; i<dx; ++i){
+        //    for(auto j=0; j<dx; ++j){
+        //      
+        //    } //end j loop
+        //  } //end i loop
+        for(auto i=0; i<dx; ++i)
+          {
+            vector<double> temp;
+            // add for i loop here..
+            for(auto j =0; j < dy; ++j)
+              temp.push_back(666);
+            data.push_back(temp);
+          } // end for loop
+      } // end pml case
+    } // end switch 
+} //end constructor
 
 ostream &operator<<(ostream &out, const Matrix &m)
 {
@@ -401,7 +428,7 @@ vector<Matrix> & YeeScheme::updatePulse(int tStep, PulseOptions p)
   return field;
 }
 
-void Matrix::PrintToFile(int tstep) 
+void Matrix::PrintToFile(int tstep)
 {
   string num;
   if (tstep < 10)
@@ -476,6 +503,9 @@ vector<Matrix> &  YeeScheme::updateInterior(YeeScheme::ModeOptions m, vector<Mat
                {
                  cout<<"Dz!\n";
              // * Update dz-field
+                 /* change to:
+                  * auto x= 0; x< field[0].dx-1 ;++x...
+                  * or */
                for (auto x =gh; x <   field[0].dx-1 ;++x){
                  for (auto y =gh; y < field[0].dy-1;++y){ //fixed for spurious boundary!
                  field[0].data[x][y] +=  + 0.5*(field[2].data[x][y] - field[2].data[x-1][y] - field[1].data[x][y] + field[1].data[x][y-1] );
@@ -613,16 +643,117 @@ vector<Matrix> &  YeeScheme::iterateSolution(int tStep, YeeScheme::ModeOptions m
 
 
 
+/*
+  cell::updateInterior
+
+
+ */
+
+//vector<Matrix> &  Cell::updateInterior(YeeScheme::ModeOptions m, vector<Matrix>::iterator it, int tStep)
+//{
+//         switch (m)
+//           {
+//             /*
+//               |---------+----------------------------|
+//               | Tm Mode |                            |
+//               |---------+----------------------------|
+//               | field   | corresponding vector index |
+//               |---------+----------------------------|
+//               | dz      | field[0]                   | 
+//               | hx      | field[1]                   |
+//               | hy      | field[2]                   |
+//               | ez      | field[3]                   |
+//               | ga      | field[4]                   |
+//               |---------+----------------------------| */
+//           case TM_MODE: 
+//             if (std::distance(it, field.begin()) == 0)
+//               {
+//                 cout<<"Dz!\n";
+//             // * Update dz-field
+//                 /* change to:
+//                  * auto x= 0; x< field[0].dx-1 ;++x...
+//                  * or */
+//               for (auto x =gh; x <   field[0].dx-1 ;++x){
+//                 for (auto y =gh; y < field[0].dy-1;++y){ //fixed for spurious boundary!
+//                 field[0].data[x][y] +=  + 0.5*(field[2].data[x][y] - field[2].data[x-1][y] - field[1].data[x][y] + field[1].data[x][y-1] );
+//               }} // end for loop
+//             // needs to update boundary for each field iteration!
+//             return field;
+//}
+//
+//             //        if (std::distance(it, field.begin()) == 1)
+//             //          {
+//             //        // * Update ez-field
+//             //        for (auto y =gh; y < field[0].dy-1;++y){
+//             //          for (auto x =gh; x <   field[0].dx-1 ;++x){
+//             //            // field[4].data[x][y] +=  0 ; /* *todo* */
+//             //          }} //end ez-field update
+//             //        return field; 
+//             //          } // end iterator if
+//
+//             else if (std::distance(field.begin(),it) == 1)
+//               {
+//                 updatePulse(tStep, GAUSS_SOURCE); //just update before hx..
+//                 cout<<"dzField SecondPrint:\n"<<field[0]<<"\n\n";
+//                 cout<<"Hx!\n";
+//             // * Update hx-field
+//               for (auto x =gh; x <   field[0].dx-1 ;++x){
+//                 for (auto y =gh; y < field[0].dy-1;++y){
+//                 field[1].data[x][y] +=  + 0.5*(field[0].data[x][y] - field[0].data[x][y+1] );}} // end hx-field update
+//             return field;
+//               }
+//
+//
+//             else if (std::distance(field.begin(),it) == 2)
+//               {
+//                 cout<<"Hy!\n";
+//             // * Update hy-field
+//               for (auto x =gh; x <   field[0].dx-1 ;++x){
+//                 for (auto y =gh; y < field[0].dy-1;++y){
+//                 field[2].data[x][y] += + 0.5*(field[0].data[x+1][y] - field[0].data[x][y] ); 
+//               }}  // end hy-field update
+//             return field;
+//               }
+//           }
+//         return field;
+//}
+//             /*
+//             |---------+----------------------------|
+//             | Te Mode |                            |
+//             |---------+----------------------------|
+//             | field   | corresponding vector index |
+//             |---------+----------------------------|
+//             | hz      | field[0]                   |
+//             | ex      | field[1]                   |
+//             | ey      | field[2]                   |
+//             |---------+----------------------------| */
+
 
 
 int main(int argc, char* argv[])
 {
   Cell myPml(8,4);
-  Cell poopy(8,4,Cell::PML);
   cout<<"myPml is:\n"<<myPml;
+
+  // vector of cells:
+  Cell cell1(8,8,Cell::INTERIOR);
+  Cell cell2(4,4,Cell::PML);
+  Cell cell3(8,4,Cell::PML);
+  Cell cell4(4,4,Cell::PML);
+  Cell cell5(4,8,Cell::PML);
+  Cell cell6(4,4,Cell::PML);
+  Cell cell7(8,4,Cell::PML);
+  Cell cell8(4,4,Cell::PML);
+  Cell cell9(4,8,Cell::PML);
+  vector<Cell> cellVector = {cell1, cell2, cell3, cell4, cell5, cell6, cell7, cell8, cell9};
+  //how can objects get index of cellVector?
 
   // the topology of the mesh
   // is the connectivity between the cells
+
+  // array connectivity[]
+  // the topology is implicitly defined by the ordering of the point list..
+
 
   // use array to store neighbor indices
   // 4i+3 <- each cell has 4 neighbors! for the ith cell..
@@ -635,20 +766,19 @@ int main(int argc, char* argv[])
   // maybe rename Cell to Region
   // maybe i should create the field
   // in a cases environment still
-    Cell s0(8,16, Cell::PML);
-    Cell s1(8,16, Cell::PML);
-    Cell s2(8,16, Cell::PML);
-    Cell s3(8,16, Cell::PML);
-    Cell s4(8,16, Cell::PML);
-    Cell s5(8,16, Cell::PML);
-    Cell s6(8,16, Cell::PML);
-    Cell s7(8,16, Cell::PML);
-    Cell s8(8,16, Cell::PML);
+  Cell s0(8,16, Cell::PML,Cell::TM_MODE);
+  Cell s1(8,16, Cell::PML,Cell::TM_MODE);
+  Cell s2(8,16, Cell::PML,Cell::TM_MODE);
+  Cell s3(8,16, Cell::PML,Cell::TM_MODE);
+  Cell s4(8,16, Cell::PML,Cell::TM_MODE);
+  Cell s5(8,16, Cell::PML,Cell::TM_MODE);
+  Cell s6(8,16, Cell::PML,Cell::TM_MODE);
+  Cell s7(8,16, Cell::PML,Cell::TM_MODE);
+  Cell s8(8,16, Cell::PML,Cell::TM_MODE);
+
     //Prototyp: needs to have form:
     //Cell s8(8,16, Cell::PML, TM);
     //           - or -           //
-    //Cell s8(8,16, Cell::PML(TM, connectsWithOrientationLeft) );
-    //Cell s8(8,16, Cell::PML(TM, orientation(<)) );
 
 
 
