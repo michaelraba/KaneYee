@@ -1,0 +1,22 @@
+#include <vector>
+#include <iostream>
+
+struct mat {
+  int dx, dy;
+  std::vector<std::vector<int>> m;
+  mat(int x, int y) : dx{x}, dy{y}, m(x, std::vector<int>(y, 0)) {}
+  void print() {
+    for (int y = 0; y < dy; y++) {
+      for (int x = 0; x < dx; x++) {
+        std::cout << m[x][y] << ' ';
+      }
+      std::cout << '\n';
+    }
+  }
+};
+
+int main() {
+  mat foo(2,3);
+  foo.m[1][2] = 7;
+  foo.print();
+}
