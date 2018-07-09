@@ -18,7 +18,7 @@ constexpr double pi() { return std::atan(1)*4; }
 class Matrix
 {
   friend class YeeScheme;
-  friend class Card;
+  friend class Cell;
 public:
   Matrix(int sizeX, int sizeY);
   int GetSizeX() const{return dx;}
@@ -133,12 +133,12 @@ YeeScheme::YeeScheme(vector<Matrix> m)
 // objects connect to interior region from left, top, etc.
 // PML-right needs to connect correctly to interior.. etc
 enum PMLType {left,right, top,bottom};
-class Card : public Matrix
+class Cell : public Matrix
 {
  public:
   enum mTyp{ INTERIOR, PML, NEUMANN /*...*/}; //maybe this enum belongs in main!
-  //  Card();
-  Card(int sizeX, int sizeY) ;
+  //  Cell();
+  Cell(int sizeX, int sizeY) ;
   /* constructor for a matrix with:
   ** dimension dx, dy
   ** mType ie. PML, INTERIOR.. etc
@@ -149,9 +149,9 @@ class Card : public Matrix
   //this needs to operate on {hx,hy,dz}.. 
 
   // update sthe interior..
-  Card(int sizeX, int sizeY, mTyp typ) ;
+  Cell(int sizeX, int sizeY, mTyp typ) ;
   vector<Matrix> updateInterior;
-  // make method to format the card as a pml or interior or neumann boundary..!
+  // make method to format the cell as a pml or interior or neumann boundary..!
 
  private:
   mTyp typ;
@@ -159,7 +159,7 @@ class Card : public Matrix
 
   // the actal hx, hy,hz... data 
   // this is the private data that each
-  // "card" has.
+  // "cell" has.
   // we can push_back the actual field in main!
   // ie. vector<Matrix> shit0,shit1,shit2,...,shit;
   // shit0.push_back(8,16, PML) //has form of newest constructor 
@@ -168,7 +168,7 @@ class Card : public Matrix
 };
 
 
-Card::Card(int sizeX, int sizeY) : Matrix(sizeX,sizeY)
+Cell::Cell(int sizeX, int sizeY) : Matrix(sizeX,sizeY)
 // : dx(sizeX), dy(sizeY)
 {
     assert(sizeX > 0 && sizeY > 0);
@@ -186,9 +186,9 @@ Card::Card(int sizeX, int sizeY) : Matrix(sizeX,sizeY)
       //   }
 }
 
-// Card constructor with typ parameter
+// Cell constructor with typ parameter
 // this should also ahve a TE or TM type option!
-Card::Card(int sizeX, int sizeY, mTyp typ) : Matrix(sizeX,sizeY)
+Cell::Cell(int sizeX, int sizeY, mTyp typ) : Matrix(sizeX,sizeY)
 {
 
   switch (typ)
@@ -617,38 +617,46 @@ vector<Matrix> &  YeeScheme::iterateSolution(int tStep, YeeScheme::ModeOptions m
 
 int main(int argc, char* argv[])
 {
-  Card myPml(8,4);
-  Card poopy(8,4,Card::PML);
+  Cell myPml(8,4);
+  Cell poopy(8,4,Cell::PML);
   cout<<"myPml is:\n"<<myPml;
 
-  // now how to feed fields into card? no, it is a private
-  // field for each card.
+  // the topology of the mesh
+  // is the connectivity between the cells
 
-  // maybe rename Card to Region
+  // use array to store neighbor indices
+  // 4i+3 <- each cell has 4 neighbors! for the ith cell..
+
+  // what is the connectivity relationship
+
+  // now how to feed fields into cell? no, it is a private
+  // field for each cell.
+
+  // maybe rename Cell to Region
   // maybe i should create the field
   // in a cases environment still
-    Card s0(8,16, Card::PML);
-    Card s1(8,16, Card::PML);
-    Card s2(8,16, Card::PML);
-    Card s3(8,16, Card::PML);
-    Card s4(8,16, Card::PML);
-    Card s5(8,16, Card::PML);
-    Card s6(8,16, Card::PML);
-    Card s7(8,16, Card::PML);
-    Card s8(8,16, Card::PML);
+    Cell s0(8,16, Cell::PML);
+    Cell s1(8,16, Cell::PML);
+    Cell s2(8,16, Cell::PML);
+    Cell s3(8,16, Cell::PML);
+    Cell s4(8,16, Cell::PML);
+    Cell s5(8,16, Cell::PML);
+    Cell s6(8,16, Cell::PML);
+    Cell s7(8,16, Cell::PML);
+    Cell s8(8,16, Cell::PML);
     //Prototyp: needs to have form:
-    //Card s8(8,16, Card::PML, TM);
+    //Cell s8(8,16, Cell::PML, TM);
     //           - or -           //
-    //Card s8(8,16, Card::PML(TM, connectsWithOrientationLeft) );
-    //Card s8(8,16, Card::PML(TM, orientation(<)) );
+    //Cell s8(8,16, Cell::PML(TM, connectsWithOrientationLeft) );
+    //Cell s8(8,16, Cell::PML(TM, orientation(<)) );
 
 
 
     // corner piece -> just one parameter.
-    //Card s8(8,16, Card::PML(TM) );
+    //Cell s8(8,16, Cell::PML(TM) );
 
     //interior isotropic region--> 1 parameter 
-    //Card s8(8,16, Card::vacuum(TM) );
+    //Cell s8(8,16, Cell::vacuum(TM) );
 
 
   //  enum ModeOptions { TM_MODE, TE_MODE,SHITS/*...*/ }; //keep this enim in YeeScheme (for now..)
