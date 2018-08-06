@@ -6,13 +6,14 @@
 #include<sstream>
 #include<cmath>
 
+
 using namespace std;
 // deprecated constants...
 int gh=1;
 int IE = 4+2*gh-1; // really this is grid and boundary data. //ie,je first number was 5, changing to 200...
 int JE = 4+2*gh-1; // does't need to be a global var.
 
-vector<int> cellTopology = {0};
+vector<int> cellTopology = {1193,1234,1351,1472,2100,2200,2331,2492,3123,3200,3341,3412,4133,4200,4300,4452,5113,5244,5300,5462,6173,6254,6300,6400,7183,7214,7361,7400,8100,8294,8371,8400,9100,9224,9311,9482};
 
 // define Pi=3.1415
 constexpr double pi() { return std::atan(1)*4; }
@@ -149,27 +150,33 @@ class Cell : public Matrix
   dimension etc.
   * these objects operate on a field type ie {hx,hy,ez}
    */
-  //this needs to operate on {hx,hy,dz}.. 
+  //this needs to operate on {hx,hy,dz}..
 
   // update sthe interior..
   Cell(int sizeX, int sizeY, mTyp typ) ;
   Cell(int sizeX, int sizeY, mTyp typ, ModeOptions mode) ;
-  //vector<Matrix> updateInterior;
-  vector<Matrix> & updateInterior(ModeOptions, mTyp, vector<Matrix>::iterator it , int tStep);
+
+  // update each matrix (cell1, cell2,cell3,...,cell9)
+  //
+  //vector<Matrix> & updateCell(ModeOptions, mTyp, vector<Matrix>::iterator it , int tStep);
+
+  // returns: a cell
+  Cell & updateCell(ModeOptions, mTyp, vector<Matrix>::iterator it , int tStep);
+  Cell & doShit();
   // make method to format the cell as a pml or interior or neumann boundary..!
 
  private:
   mTyp typ;
 
 
-  // the actal hx, hy,hz... data 
+  // the actal hx, hy,hz... data
   // this is the private data that each
   // "cell" has.
   // we can push_back the actual field in main!
   // ie. vector<Matrix> shit0,shit1,shit2,...,shit;
-  // shit0.push_back(8,16, PML) //has form of newest constructor 
+  // shit0.push_back(8,16, PML) //has form of newest constructor
   // would make a 8 by 16 matrix with pml update cells.
-  vector<Matrix> field; 
+  vector<Matrix> field;
 };
 
 
@@ -217,6 +224,8 @@ Cell::Cell(int sizeX, int sizeY, mTyp typ) : Matrix(sizeX,sizeY)
     } // end switch 
       } //end constructor
 
+
+// another constructor
 Cell::Cell(int sizeX, int sizeY, mTyp typ, ModeOptions mode) : Matrix(sizeX,sizeY)
 {
   switch (typ)
@@ -323,6 +332,13 @@ vector<Matrix> & YeeScheme::updateBoundary(YeeScheme::BoundaryOptions b, vector<
     }
   return field;
 }
+
+
+Cell & Cell::updateCell(Cell::ModeOptions, Cell::mTyp, vector<Matrix>::iterator it , int tStep)
+{
+  return *this;
+}
+
 
 vector<Matrix> & YeeScheme::updateBoundary(vector<YeeScheme::BoundaryOptions> b, vector<Matrix>::iterator it)
 {
@@ -480,7 +496,7 @@ return result;
 
      *** TM_MODE
 
-     Uses the vector field tuple (Ez, Hx,Hy) which is stored in the vectors of matrices vector<Matrix>. The tuple is updated according to the rules as described in Yee. 
+     Uses the vector field tuple (Ez, Hx,Hy) which is stored in the vectors of matrices vector<Matrix>. The tuple is updated according to the rules as described in Yee.
 */
 vector<Matrix> &  YeeScheme::updateInterior(YeeScheme::ModeOptions m, vector<Matrix>::iterator it, int tStep)
 {
@@ -492,13 +508,13 @@ vector<Matrix> &  YeeScheme::updateInterior(YeeScheme::ModeOptions m, vector<Mat
                |---------+----------------------------|
                | field   | corresponding vector index |
                |---------+----------------------------|
-               | dz      | field[0]                   | 
+               | dz      | field[0]                   |
                | hx      | field[1]                   |
                | hy      | field[2]                   |
                | ez      | field[3]                   |
                | ga      | field[4]                   |
                |---------+----------------------------| */
-           case TM_MODE: 
+           case TM_MODE:
              if (std::distance(it, field.begin()) == 0)
                {
                  cout<<"Dz!\n";
@@ -710,7 +726,7 @@ vector<Matrix> &  YeeScheme::iterateSolution(int tStep, YeeScheme::ModeOptions m
 //             // * Update hy-field
 //               for (auto x =gh; x <   field[0].dx-1 ;++x){
 //                 for (auto y =gh; y < field[0].dy-1;++y){
-//                 field[2].data[x][y] += + 0.5*(field[0].data[x+1][y] - field[0].data[x][y] ); 
+//                 field[2].data[x][y] += + 0.5*(field[0].data[x+1][y] - field[0].data[x][y] );
 //               }}  // end hy-field update
 //             return field;
 //               }
@@ -729,30 +745,44 @@ vector<Matrix> &  YeeScheme::iterateSolution(int tStep, YeeScheme::ModeOptions m
 //             |---------+----------------------------| */
 
 
+Cell & Cell::doShit()
+{
+  int i;
+  int cellNumber = 4*i;
+  //cellTopology[1]
+  return *this;
+
+
+  // vector<int> cellTopology = {1193,1234,1351,1472,2100,2200,2331,2492,3123,3200,3341,3412,4133,4200,4300,4452,5113,5244,5300,5462,6173,6254,6300,6400,7183,7214,7361,7400,8100,8294,8371,8400,9100,9224,9311,9482};
+}
 
 int main(int argc, char* argv[])
 {
-  Cell myPml(8,4);
-  cout<<"myPml is:\n"<<myPml;
+  Cell mike(4,4); // cell 0
+  Cell maria(4,4); // cell 1.
+  cout<<"mike is:\n"<<mike;
+  cout<<"maria is:\n"<<mike;
+
+  //Now change mike based on maria
+
 
   // vector of cells:
-  Cell cell1(8,8,Cell::INTERIOR);
-  Cell cell2(4,4,Cell::PML);
-  Cell cell3(8,4,Cell::PML);
-  Cell cell4(4,4,Cell::PML);
-  Cell cell5(4,8,Cell::PML);
-  Cell cell6(4,4,Cell::PML);
-  Cell cell7(8,4,Cell::PML);
-  Cell cell8(4,4,Cell::PML);
-  Cell cell9(4,8,Cell::PML);
-  vector<Cell> cellVector = {cell1, cell2, cell3, cell4, cell5, cell6, cell7, cell8, cell9};
+  Cell cell1(8,8,/*interior or pml or n-bdy*/Cell::INTERIOR, /*tm or te mode*/Cell::TEST_CASE);
+  // Cell cell2(4,4,Cell::PML,Cell::TEST);
+  // Cell cell3(8,4,Cell::PML,Cell::TEST);
+  // Cell cell4(4,4,Cell::PML,Cell::TEST);
+  // Cell cell5(4,8,Cell::PML,Cell::TEST);
+  // Cell cell6(4,4,Cell::PML,Cell::TEST);
+  // Cell cell7(8,4,Cell::PML,Cell::TEST);
+  // Cell cell8(4,4,Cell::PML,Cell::TEST);
+  // Cell cell9(4,8,Cell::PML,Cell::TEST);
+  // vector<Cell> cellVector = {cell1, cell2, cell3, cell4, cell5, cell6, cell7, cell8, cell9};
   //how can objects get index of cellVector?
 
   // the topology of the mesh
   // is the connectivity between the cells
-
   // array connectivity[]
-  // the topology is implicitly defined by the ordering of the point list..
+  // NO((the topology is implicitly defined by the ordering of the point list..))
 
 
   // use array to store neighbor indices
@@ -766,15 +796,6 @@ int main(int argc, char* argv[])
   // maybe rename Cell to Region
   // maybe i should create the field
   // in a cases environment still
-  Cell s0(8,16, Cell::PML,Cell::TM_MODE);
-  Cell s1(8,16, Cell::PML,Cell::TM_MODE);
-  Cell s2(8,16, Cell::PML,Cell::TM_MODE);
-  Cell s3(8,16, Cell::PML,Cell::TM_MODE);
-  Cell s4(8,16, Cell::PML,Cell::TM_MODE);
-  Cell s5(8,16, Cell::PML,Cell::TM_MODE);
-  Cell s6(8,16, Cell::PML,Cell::TM_MODE);
-  Cell s7(8,16, Cell::PML,Cell::TM_MODE);
-  Cell s8(8,16, Cell::PML,Cell::TM_MODE);
 
     //Prototyp: needs to have form:
     //Cell s8(8,16, Cell::PML, TM);
@@ -785,7 +806,7 @@ int main(int argc, char* argv[])
     // corner piece -> just one parameter.
     //Cell s8(8,16, Cell::PML(TM) );
 
-    //interior isotropic region--> 1 parameter 
+    //interior isotropic region--> 1 parameter
     //Cell s8(8,16, Cell::vacuum(TM) );
 
 
@@ -938,3 +959,4 @@ int main(int argc, char* argv[])
 return 0;
 }
 //eof
+
