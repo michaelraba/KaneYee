@@ -9,11 +9,15 @@
 
 using namespace std;
 // deprecated constants...
+// IE = JE = 5
 int gh=1;
 int IE = 4+2*gh-1; // really this is grid and boundary data. //ie,je first number was 5, changing to 200...
 int JE = 4+2*gh-1; // does't need to be a global var.
 
-vector<int> cellTopology = {1193,1234,1351,1472,2100,2200,2331,2492,3123,3200,3341,3412,4133,4200,4300,4452,5113,5244,5300,5462,6173,6254,6300,6400,7183,7214,7361,7400,8100,8294,8371,8400,9100,9224,9311,9482};
+vector<int> cellTopology={93,34,51,72,00,00,31,92,23,00,41,12,33,00,00,52,13,44,00,62,73,54,00,00,83,14,61,00,00,94,71,00,00,24,11,82};
+
+
+//cellTopology = {1193,1234,1351,1472,2100,2200,2331,2492,3123,3200,3341,3412,4133,4200,4300,4452,5113,5244,5300,5462,6173,6254,6300,6400,7183,7214,7361,7400,8100,8294,8371,8400,9100,9224,9311,9482};
 
 // define Pi=3.1415
 constexpr double pi() { return std::atan(1)*4; }
@@ -163,6 +167,7 @@ class Cell : public Matrix
   // returns: a cell
   Cell & updateCell(ModeOptions, mTyp, vector<Matrix>::iterator it , int tStep);
   Cell & doShit();
+  vector<Cell> & doMore();
   // make method to format the cell as a pml or interior or neumann boundary..!
 
  private:
@@ -747,21 +752,52 @@ vector<Matrix> &  YeeScheme::iterateSolution(int tStep, YeeScheme::ModeOptions m
 
 Cell & Cell::doShit()
 {
-  int i;
-  int cellNumber = 4*i;
-  //cellTopology[1]
+  // cellTopology={93,34,51,72,00,00,31,92,23
+  //               1  1  1  1  2  2  2  2  3
+  // cellTopology[4j + i], j = 0,..., i={0,..,3}
+  // i is the ith cell,
+  // j is the jth face in the cell.
+  // cellTopology[0] = 93.
+  // 93 can be a int or a string..
+  // array of strings. maybe string has | char so i can parse.
+  cout << "celTop is: "<<cellTopology[0]<<endl;
+  for(int i=0;  i<IE-1;i++)
+    for(int j=0;j<JE-1;j++){
+    {
+      try{
+      //data[i][j]=data[i][j+1];
+      data[i][j]=data.at(i).at(j+1);
+}
+      catch (const std::exception& e) { // caught by reference to base
+        //std::cout << " a standard exception was caught, with message '"
+        //           << e.what() << "'\n";
+        data[i][j]=666;
+      } // end catch
+    } } // end loops
+  // when i = IE-1,
+  // do like normal ?
+  // what if it reaches out of bounds?
+  // maybe have exception..:
+  // if out-of-bounds error,
+  // then ...
+  // check what array id is..
+  // and retry, this time
+  // invoking cellTopology.
+
   return *this;
-
-
-  // vector<int> cellTopology = {1193,1234,1351,1472,2100,2200,2331,2492,3123,3200,3341,3412,4133,4200,4300,4452,5113,5244,5300,5462,6173,6254,6300,6400,7183,7214,7361,7400,8100,8294,8371,8400,9100,9224,9311,9482};
 }
 
 int main(int argc, char* argv[])
 {
-  Cell mike(4,4); // cell 0
+  Cell  mike(4,4); // cell 0
   Cell maria(4,4); // cell 1.
   cout<<"mike is:\n"<<mike;
   cout<<"maria is:\n"<<mike;
+  mike.doShit();
+  cout<<"mike is:\n"<<mike;
+  // now write function in class Cell
+  // to take a vector of cells.
+  vector<Cell> cellVector ={mike,maria};
 
   //Now change mike based on maria
 
